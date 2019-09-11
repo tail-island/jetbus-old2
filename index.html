@@ -955,8 +955,7 @@ dependencies {
 <span id="cb6-40"><a href="#cb6-40"></a>    <span class="kw">&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</span></span>
 <span id="cb6-41"><a href="#cb6-41"></a></span>
 <span id="cb6-42"><a href="#cb6-42"></a><span class="kw">&lt;/layout&gt;</span></span></code></pre></div>
-<p>ConstraintLayoutのところでUIコンポーネントは<code>app:layout_constraint...</code>属性でレイアウトすると説明しておきながら、そこでは使わなかった<code>app:layout_constraint...</code>が出てきてくれました（activity_main.xmlでは、<code>android:layout_width</code>属性も<code>android:layout_height</code>属性も「match_parent」だったので、制約をつける必要がなかったんですよ）。自分がなんの画面なのかを表示する<code>TextView</code>を左上に、その下に<code>Button</code>を表示するようになっています。<code>android:layout_marginTop</code>属性はマージンです。マージン分だけ隙間を開けてくれるわけですな。</p>
-<p>こんな感じでルート要素が<code>&lt;layout&gt;</code>になるように、他の<code>Fragment</code>のレイアウトも同様に修正してください。</p>
+<p>ConstraintLayoutのところでUIコンポーネントは<code>app:layout_constraint...</code>属性でレイアウトすると説明しておきながら、そこでは使わなかった<code>app:layout_constraint...</code>が出てきてくれました（activity_main.xmlでは、<code>android:layout_width</code>属性も<code>android:layout_height</code>属性も「match_parent」だったので、制約をつける必要がなかったんですよ）。自分がなんの画面なのかを表示する<code>TextView</code>を左上に、その下に<code>Button</code>を表示するようになっています。<code>android:layout_marginTop</code>属性はマージンです。マージン分だけ隙間を開けてくれるわけですな。 こんな感じでルート要素が<code>&lt;layout&gt;</code>になるように、他の<code>Fragment</code>のレイアウトも同様に修正してください。</p>
 <h2 id="fragmentの実装">Fragmentの実装</h2>
 <p>レイアウトの修正が終わったら、ロジックの修正です。代表例は先ほどと同じ<code>BookmarksFragment</code>で。</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">package</span> <span class="im">com.tail_island.jetbus</span></span>
@@ -1247,9 +1246,9 @@ dependencies {
 <p>あと、上のコードでやっているのは、<code>SplashFragment</code>でApp barを消していること。App barに[戻る]アイコンが表示されてしまいますし、調べた限りでは、他のアプリでもスプラッシュ画面にはApp barがありませんでしたから。</p>
 <p>ともあれ、これで作業完了のはず。試してみましょう</p>
 <p>動画</p>
-<p>うん、完璧ですな。Navigationよ今夜もありがとう。Navigationくらいに楽チンな、App barとNavigation drawerをどうにかしてくれるライブラリを作ってくれないかなぁ……。</p>
+<p>うん、完璧ですな。Navigationよ今夜もありがとう。Navigationくらいに楽チンな、App barとNavigation drawerをどうにかしてくれるライブラリがJetpackに追加されないかなぁ……。</p>
 <h1 id="retrofit2">Retrofit2</h1>
-<p>本アプリは<a href="https://www.odpt.org/">公共交通オープンデータセンター</a>が提供してくれるデータが無いと動きようがありませんので、個々の画面の機能を作っていく前に、HTTP通信でWebサーバーからデータを取得する処理を作ってみましょう。ただ、残念なことにJetpackにはHTTP通信の機能がありませんので、Retrofit2を使用します。</p>
+<p>さて、本アプリは<a href="https://www.odpt.org/">公共交通オープンデータセンター</a>が提供してくれるデータが無いと動きようがありませんので、個々の画面の機能を作っていく前に、HTTP通信でWebサーバーからデータを取得する処理を作ってみましょう。残念なことにJetpackにはHTTP通信の機能がありませんので、外部のライブラリであるRetrofit2を使用します。</p>
 <h2 id="retrofit2の組み込み">Retrofit2の組み込み</h2>
 <p>Retrofit2を組み込むために、build.gradelを変更します。</p>
 <div class="sourceCode" id="cb21"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb21-1"><a href="#cb21-1"></a>dependencies {</span>
@@ -1262,10 +1261,235 @@ dependencies {
 <span id="cb21-8"><a href="#cb21-8"></a></span>
 <span id="cb21-9"><a href="#cb21-9"></a>    ...</span>
 <span id="cb21-10"><a href="#cb21-10"></a>}</span></code></pre></div>
-<p>これで、いつでもHTTP通信できるわけですけど、さて、公共交通オープンデータセンターからどんなデータを取得できるのでしょうか？</p>
-<h2 id="高交通オープンデータセンター">高交通オープンデータセンター</h2>
-<p><a href="https://odpt.org/">公共交通オープンデータセンター</a>のサイトを開いて、下の方にある[<a href="https://developer.odpt.org/ja/info">公共交通オープンデータセンター開発者サイト</a>]リンクをクリックします。で、真ん中あたりにある[ユーザ登録のお願い]ボタンを押して、もろもろ入力して[この内容で登録を申請する]ボタンを押して、で、「最大2営業日」で登録完了のメールが送られてきます……。なんで最大2営業日なんだろ？</p>
-<p>登録が完了したらログインして、右上の[Account]メニューの[アクセストークンの確認・追加]を選ぶと、アクセストークンが表示されます。まずはこれをコピーしてください。で、この情報の保存先なのですけど、今回はリソースを使用しましょう。Androidアプリの開発では、様々な定数をリソースとしてコードの外に定義できます。このリソースをうまく使うと、国際化もできてとても便利です。</p>
+<p>これで、いつでもHTTP通信できるわけですけど、その前に、公共交通オープンデータセンターにユーザー登録しないとね。</p>
+<h2 id="公共交通オープンデータセンターへのユーザー登録">公共交通オープンデータセンターへのユーザー登録</h2>
+<p><a href="https://odpt.org/">公共交通オープンデータセンター</a>のサイトを開いて、下の方にある[<a href="https://developer.odpt.org/ja/info">公共交通オープンデータセンター開発者サイト</a>]リンクをクリックします。で、真ん中あたりにある[ユーザ登録のお願い]ボタンを押して、もろもろ入力して[この内容で登録を申請する]ボタンを押すと、「最大2営業日」で登録完了のメールが送られてきます。……どうして、最大とはいえ2営業日もかかるんだろ？</p>
+<p>登録が完了したらログインして、右上の[Account]メニューの[アクセストークンの確認・追加]を選ぶと、アクセス・トークンが表示されます。まずはこれをコピーしてください。この情報の保存先としては、リソースを使用します。[File] - [New] - [Android Resource File]メニューを選択して、[File name]に「odpt」を入力して[Resource type]を「Value」に設定し、作成されたodpt.xmlに以下を入力します。</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;utf-8&quot;<span class="kw">?&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="kw">&lt;resources&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>    <span class="kw">&lt;string</span><span class="ot"> name=</span><span class="st">&quot;consumerKey&quot;</span><span class="kw">&gt;</span>アクセス・トークン<span class="kw">&lt;/string&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="kw">&lt;/resources&gt;</span></span></code></pre></div>
+<p>よし、これで公共交通オープンデータセンターのデータを使い放題……なのですけど、いったい、どんなデータがあるのでしょうか？</p>
+<h2 id="公共交通オープンデータセンターのデータ">公共交通オープンデータセンターのデータ</h2>
+<p><a href="https://developer.odpt.org/">公共交通オープンデータセンター開発者サイト</a>の[<a href="https://developer.odpt.org/documents">API仕様</a>]リンクをクリックすれば、公共交通オープンデータセンターが提供するデータの仕様が分かります。</p>
+<p>左に表示されている目次の[4. ODPT Bus API]リンクをクリックすると、バスに関するどのようなデータをとれるのかが分かります。見てみると、以下の6つの情報を取得できるみたい。</p>
+<ul>
+<li><code>odpt:BusstopPole</code>（バス停（標柱）の情報）</li>
+<li><code>odpt:BusroutePattern</code>（バス路線の系統情報）</li>
+<li><code>odpt:BusstopPoleTimetable</code>（バス停(標柱)の時刻表）</li>
+<li><code>odpt:BusTimetable</code>（バスの便の時刻表）</li>
+<li><code>odpt:BusroutePatternFare</code>（運賃情報）</li>
+<li><code>odpt:Bus</code>（バスの運行情報）</li>
+</ul>
+<p>バスの運行情報がありますから、バスの車両の接近情報は表示できそうですね。なんかいろいろ細かいことが書いてありますけど、習うより慣れろってことで、Webブラウザを開いて、まずはバス停を取得してみましょう。「<a href="http://api.odpt.org/api/v4/odpt:BusstopPole?acl:consumerKey=ACL\_CONSUMERKEY&amp;odpt:operator=odpt.Operator:Toei" class="uri">http://api.odpt.org/api/v4/odpt:BusstopPole?acl:consumerKey=ACL\_CONSUMERKEY&amp;odpt:operator=odpt.Operator:Toei</a>」（ACL_CONSUMERKEYの部分には、ユーザー登録で取得したアクセストークンをコピー＆ペーストしてください）を開いてみます。なるほどバス停のデータが取得できている……のですけど、検索しても、こんなダラダラ生きている私を雇用してくださってるとてもありがたい「日本ユニシス本社前」という、私が会社からの帰りに使うバス停が見つかりませんでした。</p>
+<p>図</p>
+<p>データが欠落しているのは、API仕様の[1.3. インターフェース]の中の[1.3.1. 留意点]に「APIによって出力される結果がシステムの上限件数を超える場合、上限件数以下にフィルターされた結果が返る」とあって、リンクを辿って調べてみたら、その上限件数は1,000件だったためです（2019年8月現在）。<code>odpt:BusstopPole</code>はバス停ではなくてバス停の標柱（方面ごとに立っているアレ）で大量なので、余裕で1,000件を超えてしまって切り捨てられちゃったみたい。</p>
+<p>というわけで、データ検索APIではなくて、データダンプAPIを使いましょう。「<a href="http://api.odpt.org/api/v4/odpt:BusstopPole.json?acl:consumerKey=ACL\_CONSUMERKEY" class="uri">http://api.odpt.org/api/v4/odpt:BusstopPole.json?acl:consumerKey=ACL\_CONSUMERKEY</a>」（URIに「.json」が追加されました。あと、先ほどと同様に、ACL_CONSUMERKEYの部分には、ユーザー登録で取得したアクセストークンをコピー＆ペーストしてください）を開いて、データの取得が完了するまで、しばし待ちます。日本全国津々浦々のバス停の標柱全てという大量のデータなので、時間がかかるんですよ……。はい、今度は、「日本ユニシス本社前」のデータが見つかりました。</p>
+<p>図</p>
+<p>ドキュメントによれば、<code>odpt:BusstopPole</code>と<code>odpt:BusroutePattern</code>は<code>owl:sameAs</code>属性で互いに紐付けられるので、出発バス停の標柱群（一つのバス停に複数の標柱がある）と到着バス停の標柱群を指定すれば、その両方に紐付いている<code>odpt:BusroutePattern</code>を抽出することで路線を見つけることができそう。ただ、<code>odpt:BusroutePattern</code>の検索APIのクエリー・パラメーターには<code>odpt:BusstopPole</code>がなかったので、抽出は自前のコードでやらなければなりませんけどね。どうせ抽出を自前のコードでやるのであれば、<code>odpt:BusroutePattern</code>もデータダンプAPIでまるっと取得してしまうことにしましょう。</p>
+<p>次。<code>odpt:Bus</code>です。APIの[4.ODPT Bus API]の中の[4.2.パス]を読むと、<code>odpt:BusroutePattern</code>をクエリー・パラメーターにとることができて、[1.4. データ検索API (/v4/RDF_TYPE?)]の中の[1.4.1. フィルター処理]によれば、カンマ区切りにすればOR条件での検索になるらしい。これなら、複数の路線のバスの運行情報を一発で取得できる……のですけど、[4.3. 定義]の中の[4.3.1. odpt:Bus]の記述によれば、どのバス停を通過したのかは分かるけど、あとどれくらいで今私の目の前にあるバス停に到着するのかは分からないみたい。なので、<code>odpt:BusTimetable</code>も取得して、時刻表からバス停とバス停の間の時間を調べて、それを足し合わせて到着までの予想時間としましょう。だから、<code>odpt:BusTimetable</code>を取得する処理も作らないとね。</p>
+<p>あと、API仕様にはバスの現在の位置によって<code>odpt:fromBusstopPole</code>属性（直近に通過した、あるいは停車中のバス停）と<code>odpt:BusstopPole</code>（次に到着するバス停）の情報がいろいろ変わると書いてあるのですけど、都営バスの実際のデータを取得して調べてみると、どうも現在位置がどうであれ<code>odpt:fromBusstopPole</code>属性と<code>odpt:toBusstopPole</code>属性の両方が設定されているみたい。ならば手を抜いて<code>odpt:fromBusstopPole</code>属性だけを見ればいいかなぁと。さらに、<code>odpt:BusTimetable</code>の<code>odpt:calendar</code>属性（平日時刻表とか休日時刻表とか）は[2.3. 定義]の中の[2.3.1. odpt:Calendar]に書いてある汎用データを使用していませんでした。なんだか、都営バス独自の特殊なデータが並んでいやがります……。まぁ、今回の<code>odbt:BusTimetable</code>の使用目的は到着時間を計算するための元ネタでしかありませんから、<code>odpt:calendar</code>も無視することにしましょう。プログラムが簡単になるし。</p>
+<p>そうそう、<code>odpt:BusstopPole</code>と<code>odpt:BusroutePattern</code>、<code>odpt:BusTimetable</code>は、データの取得に時間がかかる上にほとんど変更がない情報ですから、RDBMSにキャッシュすることにしましょう。RDBMSを使えば、突き合わせの処理が楽になりますしね。</p>
+<h2 id="webサービスの定義">Webサービスの定義</h2>
+<p>やることが決まりましたので、Webサービスの定義を作りましょう。でもその前に、データ受け渡しのためのクラスを作成します。まずは、<code>odpt:Bus</code>を表現するクラスを作成します。モデルを入れるための<code>model</code>パッケージを作成して、その中にBus.ktファイルを作成して、以下のコードを入力してください。</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode kotlin:bus.kt"><code class="sourceCode kotlin"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">package</span> <span class="im">com.tail_island.jetbus.model</span></span>
+<span id="cb23-2"><a href="#cb23-2"></a></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="kw">import</span> <span class="im">com.google.gson.annotations.SerializedName</span></span>
+<span id="cb23-4"><a href="#cb23-4"></a></span>
+<span id="cb23-5"><a href="#cb23-5"></a><span class="kw">data</span> <span class="kw">class</span> Bus(</span>
+<span id="cb23-6"><a href="#cb23-6"></a>    @<span class="va">SerializedName</span>(&quot;<span class="va">owl</span>:<span class="dt">sameAs</span>&quot;)</span>
+<span id="cb23-7"><a href="#cb23-7"></a>    <span class="kw">var</span> id: <span class="dt">String</span>,</span>
+<span id="cb23-8"><a href="#cb23-8"></a></span>
+<span id="cb23-9"><a href="#cb23-9"></a>    @<span class="dt">SerializedName</span>(&quot;<span class="va">odpt</span>:<span class="dt">busroutePattern</span>&quot;)</span>
+<span id="cb23-10"><a href="#cb23-10"></a>    <span class="kw">var</span> <span class="va">routeId</span>: <span class="kw">String</span>,</span>
+<span id="cb23-11"><a href="#cb23-11"></a></span>
+<span id="cb23-12"><a href="#cb23-12"></a>    <span class="at">@SerializedName</span>(<span class="st">&quot;odpt:fromBusstopPole&quot;</span>)</span>
+<span id="cb23-13"><a href="#cb23-13"></a>    <span class="kw">var</span> <span class="va">fromBusStopPoleId</span>: <span class="kw">String</span></span>
+<span id="cb23-14"><a href="#cb23-14"></a>)</span></code></pre></div>
+<p>なんでクラスの後ろの括弧が波括弧（<code>{}</code>）じゃなくて丸括弧（<code>()</code>）なんだという疑問を抱いたJavaプログラマの方がいるかもしれませんので、ここで少しだけKotlinの解説をさせてください。</p>
+<p>Kotlinでは、Scalaと同様に、クラス定義の際にコンストラクタの引数を定義できます。<code>class Foo(param1: Type, param2: Type)</code>みたいな感じ。そんなところに引数を書いたらコンストラクタでの処理はどこに書くんだよと思うかもしれませんけど、コンストラクタの処理は普通は書きません（どうしても書きたい場合には<code>init {}</code>という構文があるのでご安心を）。どうして普通は書かないのかと言うと、コンストラクタでの処理は一般にインスタンスの状態の設定で、インスタンスの状態である属性の定義ではコンストラクタの引数が使えるから。<code>class Foo(param: Type) { var bar = param.doSomething() }</code>みたいな感じです。</p>
+<p>あと、Kotlinはミュータブル（可変）の変数は<code>var</code>、イミュータブル（不変）の変数は<code>val</code>で宣言するのですけど、<code>var</code>や<code>val</code>は先のコードのようにプロパティの定義でも使えます（<code>var</code>だと<code>get</code>と<code>set</code>が生成されて、<code>val</code>だと<code>get</code>だけが生成される）。これがコンストラクタの引数にも適用されて、<code>class Foo(var param1: Type, val param2: Type) {}</code>と書けば、ミュータブルなプロパティの<code>param1</code>とイミュータブルなプロパティの<code>param2</code>が生成されるというわけ。</p>
+<p>さらに、データを保持するためのクラス作成専用の<code>data class</code>という構文があります。<code>data class</code>を使うと、<code>equals()</code>メソッドや<code>hashCode()</code>メソッド、<code>toString()</code>メソッド、<code>copy()</code>メソッド（あと<code>componentN()</code>メソッド）が自動で生成されてとても便利。さらに、<code>data class</code>でメソッドの定義が不要な場合は<code>{}</code>を省略できるので、上のようなコードになるわけですな。</p>
+<p>さて、Retrofit2（が内部で使用しているGSON）的に重要なのは、<code>@SerializedName</code>の部分です。これはアノテーションと呼ばれるもので、ライブラリやコード・ジェネレーターが参照します。Retrofit2（が内部で使用しているGSON）は、<code>@SerializedName</code>アノテーションを見つけると、JSONを作成する際に<code>@SerializedName</code>アノテーションの引数で指定した文字列を使用してくれます。これで、<code>owl:sameAs</code>のようなKotlinでは許されない名前の属性を持ったJSONでも取り扱えるようになるというわけ。ふう、これで<code>odpt:Bus</code>を受け取る準備は完璧です。</p>
+<p>同様に残りの<code>odpt:BusstopPole</code>と<code>odpt:BusroutePattern</code>、<code>odpt:BusTimetable</code>も……と考えたのですけど、これらはRDBMSにキャッシュすることにしましたから、RDBMSのレコードを表現するクラスとごっちゃになってしまって混乱しそう。だから今回はクラスを作成しないで、Retrofit2（が内部で使用しているGSON）が提供する<code>JsonArray</code>（検索APIは配列を返すので、<code>JsonObject</code>ではなくて<code>JsonArray</code>にしました）を使用します。</p>
+<p>以上でWebサービスを呼び出した結果を受け取るクラスの型が全て決まりましたので、Webサービスを呼び出す部分をRetrofit2を使用して作成しましょう。といっても、実装は簡単で<code>interface</code>を定義するだけ。HTTP通信のメソッドをアノテーション（今回は<code>@GET</code>）で設定して、Webサービスの引数を同様にアノテーション（今回はクエリー・パラメーターなので<code>@Query</code>）で定義するだけですが。モデルを作成した<code>model</code>パッケージの中にWebService.ktファイルを作成して、以下を入力してください。</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode kotlin:webservice.kt"><code class="sourceCode kotlin"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">package</span> <span class="im">com.tail_island.jetbus.model</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a></span>
+<span id="cb24-3"><a href="#cb24-3"></a><span class="kw">import</span> <span class="im">com.google.gson.JsonArray</span></span>
+<span id="cb24-4"><a href="#cb24-4"></a><span class="kw">import</span> <span class="im">retrofit2.Call</span></span>
+<span id="cb24-5"><a href="#cb24-5"></a><span class="kw">import</span> <span class="im">retrofit2.http.GET</span></span>
+<span id="cb24-6"><a href="#cb24-6"></a><span class="kw">import</span> <span class="im">retrofit2.http.Query</span></span>
+<span id="cb24-7"><a href="#cb24-7"></a></span>
+<span id="cb24-8"><a href="#cb24-8"></a><span class="kw">interface</span> WebService {</span>
+<span id="cb24-9"><a href="#cb24-9"></a>    <span class="at">@GET</span>(<span class="st">&quot;/api/v4/odpt:BusstopPole.json&quot;</span>)</span>
+<span id="cb24-10"><a href="#cb24-10"></a>    <span class="kw">fun</span> <span class="fu">busstopPole</span>(@<span class="va">Query</span>(&quot;<span class="va">acl</span>:<span class="dt">consumerKey</span>&quot;) <span class="fu">consumerKey</span>: <span class="dt">String</span>): <span class="dt">Call</span>&lt;<span class="dt">JsonArray</span>&gt;</span>
+<span id="cb24-11"><a href="#cb24-11"></a></span>
+<span id="cb24-12"><a href="#cb24-12"></a>    @<span class="fu">GET</span>(&quot;/<span class="va">api</span>/<span class="va">v4</span>/<span class="va">odpt</span>:<span class="dt">BusroutePattern</span>.<span class="va">json</span>&quot;)</span>
+<span id="cb24-13"><a href="#cb24-13"></a>    <span class="kw">fun</span> <span class="fu">busroutePattern</span>(@<span class="va">Query</span>(&quot;<span class="va">acl</span>:<span class="dt">consumerKey</span>&quot;) <span class="fu">consumerKey</span>: <span class="dt">String</span>): <span class="dt">Call</span>&lt;<span class="dt">JsonArray</span>&gt;</span>
+<span id="cb24-14"><a href="#cb24-14"></a></span>
+<span id="cb24-15"><a href="#cb24-15"></a>    @<span class="fu">GET</span>(&quot;/<span class="va">api</span>/<span class="va">v4</span>/<span class="va">odpt</span>:<span class="dt">BusTimetable</span>&quot;)</span>
+<span id="cb24-16"><a href="#cb24-16"></a>    <span class="kw">fun</span> <span class="fu">busTimeTable</span>(@<span class="va">Query</span>(&quot;<span class="va">acl</span>:<span class="dt">consumerKey</span>&quot;) <span class="fu">consumerKey</span>: <span class="dt">String</span>, @<span class="fu">Query</span>(&quot;<span class="va">odpt</span>:<span class="dt">busroutePattern</span>&quot;) <span class="fu">routePattern</span>: <span class="dt">String</span>): <span class="dt">Call</span>&lt;<span class="dt">JsonArray</span>&gt;</span>
+<span id="cb24-17"><a href="#cb24-17"></a></span>
+<span id="cb24-18"><a href="#cb24-18"></a>    @<span class="fu">GET</span>(&quot;/<span class="va">api</span>/<span class="va">v4</span>/<span class="va">odpt</span>:<span class="dt">Bus</span>&quot;)</span>
+<span id="cb24-19"><a href="#cb24-19"></a>    <span class="kw">fun</span> <span class="fu">bus</span>(@<span class="va">Query</span>(&quot;<span class="va">acl</span>:<span class="dt">consumerKey</span>&quot;) <span class="fu">consumerKey</span>: <span class="dt">String</span>, @<span class="fu">Query</span>(&quot;<span class="va">odpt</span>:<span class="dt">busroutePattern</span>&quot;) <span class="fu">routePattern</span>: <span class="dt">String</span>): <span class="dt">Call</span>&lt;<span class="dt">List</span>&lt;<span class="dt">Bus</span>&gt;&gt;</span>
+<span id="cb24-20"><a href="#cb24-20"></a>}</span></code></pre></div>
+<p>はい、完成です。楽チン。</p>
+<h2 id="webサービスの呼び出し">Webサービスの呼び出し</h2>
+<p>とは言っても<code>interface</code>は呼び出しができませんので、なんとかして（Retrofit2のAPIが要求する形で）インスタンスを生成する方法を調べなければなりません。あとですね、Webサービスの呼び出しには時間がかかることにも、考慮が必要です。というのも、AndroidではUIの制御はメイン・スレッド<em>のみ</em>から実施できることになっていて、だからメイン・スレッドでWebサービスのような時間がかかる処理をすると、その処理の間は画面が無反応になっちゃう。だから、Webサービスの呼び出しは<em>別スレッドでやらなければならない</em>んです（そうしないと、画面が無反応になる以前に実行時エラーとなります）。</p>
+<p>と、こんな感じでいろいろ複雑なので、とりあえずコードを書いてみましょう。まずは、<code>odpt:BusstopPole</code>を取得してみます。最初に表示される画面である<code>SplashFragment</code>の、画面に表示される直前に呼び出される<code>onStart()</code>メソッドに、この処理を書きます。</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb25-1"><a href="#cb25-1"></a><span class="kw">package</span> <span class="im">com.tail_island.jetbus</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a></span>
+<span id="cb25-3"><a href="#cb25-3"></a><span class="co">// ....</span></span>
+<span id="cb25-4"><a href="#cb25-4"></a></span>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="kw">import</span> <span class="im">android.util.Log</span></span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="kw">import</span> <span class="im">com.tail_island.jetbus.model.WebService</span></span>
+<span id="cb25-7"><a href="#cb25-7"></a><span class="kw">import</span> <span class="im">retrofit2.Call</span></span>
+<span id="cb25-8"><a href="#cb25-8"></a><span class="kw">import</span> <span class="im">retrofit2.Retrofit</span></span>
+<span id="cb25-9"><a href="#cb25-9"></a><span class="kw">import</span> <span class="im">retrofit2.converter.gson.GsonConverterFactory</span></span>
+<span id="cb25-10"><a href="#cb25-10"></a><span class="kw">import</span> <span class="im">java.io.IOException</span></span>
+<span id="cb25-11"><a href="#cb25-11"></a><span class="kw">import</span> <span class="im">kotlin.concurrent.thread</span></span>
+<span id="cb25-12"><a href="#cb25-12"></a></span>
+<span id="cb25-13"><a href="#cb25-13"></a><span class="kw">class</span> SplashFragment: <span class="dt">Fragment</span>() {</span>
+<span id="cb25-14"><a href="#cb25-14"></a>    <span class="co">// ...</span></span>
+<span id="cb25-15"><a href="#cb25-15"></a></span>
+<span id="cb25-16"><a href="#cb25-16"></a>    <span class="kw">override</span> <span class="kw">fun</span> <span class="fu">onStart</span>() {</span>
+<span id="cb25-17"><a href="#cb25-17"></a>        <span class="kw">super</span>.onStart()</span>
+<span id="cb25-18"><a href="#cb25-18"></a></span>
+<span id="cb25-19"><a href="#cb25-19"></a>        <span class="co">// リソースからアクセス・トークンを取得します。consumerKeyって名前は提供側の用語なので嫌だけど、公共交通オープンデータセンターがこの名前を使っちゃっているからなぁ……</span></span>
+<span id="cb25-20"><a href="#cb25-20"></a>        <span class="kw">val</span> <span class="va">consumerKey</span> = getString(R.string.consumerKey)</span>
+<span id="cb25-21"><a href="#cb25-21"></a></span>
+<span id="cb25-22"><a href="#cb25-22"></a>        <span class="co">// WebServiceのインスタンスを生成します。スコープ関数が存在しない哀れな環境向けのFluentなBuilderパターン……</span></span>
+<span id="cb25-23"><a href="#cb25-23"></a>        <span class="kw">val</span> <span class="va">webService</span> = Retrofit.Builder().apply {</span>
+<span id="cb25-24"><a href="#cb25-24"></a>            baseUrl(<span class="st">&quot;https://api.odpt.org&quot;</span>)</span>
+<span id="cb25-25"><a href="#cb25-25"></a>            addConverterFactory(GsonConverterFactory.create())</span>
+<span id="cb25-26"><a href="#cb25-26"></a>        }.build().create(WebService::<span class="kw">class</span>.java)</span>
+<span id="cb25-27"><a href="#cb25-27"></a></span>
+<span id="cb25-28"><a href="#cb25-28"></a>        // Webサービスを呼んでいる間は画面が無反応になるのでは困るので、スレッドを生成します。今は素のスレッドを使用していますけど、後でもっとかっこいい方式をご紹介しますのでご安心ください</span>
+<span id="cb25-29"><a href="#cb25-29"></a>        thread {</span>
+<span id="cb25-30"><a href="#cb25-30"></a>            <span class="cf">try</span> {</span>
+<span id="cb25-31"><a href="#cb25-31"></a>                <span class="co">// WebServiceを呼び出します</span></span>
+<span id="cb25-32"><a href="#cb25-32"></a>                <span class="kw">val</span> <span class="va">response</span> = webService.busstopPole(consumerKey).execute()</span>
+<span id="cb25-33"><a href="#cb25-33"></a></span>
+<span id="cb25-34"><a href="#cb25-34"></a>                <span class="co">// HTTP通信した結果が失敗の場合は、エラーをログに出力してnullを返します</span></span>
+<span id="cb25-35"><a href="#cb25-35"></a>                <span class="cf">if</span> (!response.isSuccessful) {</span>
+<span id="cb25-36"><a href="#cb25-36"></a>                    Log.e(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;HTTP Error: ${response.code()}&quot;</span>)</span>
+<span id="cb25-37"><a href="#cb25-37"></a>                    return<span class="at">@thread</span></span>
+<span id="cb25-38"><a href="#cb25-38"></a>                }</span>
+<span id="cb25-39"><a href="#cb25-39"></a></span>
+<span id="cb25-40"><a href="#cb25-40"></a>                <span class="co">// レスポンスのボディは、interfaceの定義に従ってJsonArrayになります</span></span>
+<span id="cb25-41"><a href="#cb25-41"></a>                <span class="kw">val</span> <span class="va">busStopPoleJsonArray</span> = response.body()</span>
+<span id="cb25-42"><a href="#cb25-42"></a></span>
+<span id="cb25-43"><a href="#cb25-43"></a>                <span class="co">// nullチェック</span></span>
+<span id="cb25-44"><a href="#cb25-44"></a>                <span class="cf">if</span> (busStopPoleJsonArray == <span class="kw">null</span>) {</span>
+<span id="cb25-45"><a href="#cb25-45"></a>                    return<span class="at">@thread</span></span>
+<span id="cb25-46"><a href="#cb25-46"></a>                }</span>
+<span id="cb25-47"><a href="#cb25-47"></a></span>
+<span id="cb25-48"><a href="#cb25-48"></a>                <span class="co">// JsonObjectに変換して、都営バスのデータだけにフィルターして、最初の10件だけで、ループします</span></span>
+<span id="cb25-49"><a href="#cb25-49"></a>                <span class="cf">for</span> (busStopPoleJsonObject <span class="kw">in</span> busStopPoleJsonArray.map { it.asJsonObject }.filter { it.<span class="kw">get</span>(<span class="st">&quot;odpt:operator&quot;</span>).asString == <span class="st">&quot;odpt.Operator:Toei&quot;</span> }.take(<span class="dv">10</span>)) {</span>
+<span id="cb25-50"><a href="#cb25-50"></a>                    <span class="co">// 確認のために、いくつかの属性をログ出力します</span></span>
+<span id="cb25-51"><a href="#cb25-51"></a>                    Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>owl:sameAs<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb25-52"><a href="#cb25-52"></a>                    Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>dc:title<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb25-53"><a href="#cb25-53"></a>                    Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>odpt:kana<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb25-54"><a href="#cb25-54"></a>                }</span>
+<span id="cb25-55"><a href="#cb25-55"></a></span>
+<span id="cb25-56"><a href="#cb25-56"></a>            } <span class="cf">catch</span> (e: IOException) {</span>
+<span id="cb25-57"><a href="#cb25-57"></a>                <span class="co">// HTTP以前のエラーへの考慮も必要です。ログ出力しておきます</span></span>
+<span id="cb25-58"><a href="#cb25-58"></a>                Log.e(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${e.message}&quot;</span>)</span>
+<span id="cb25-59"><a href="#cb25-59"></a>            }</span>
+<span id="cb25-60"><a href="#cb25-60"></a>        }</span>
+<span id="cb25-61"><a href="#cb25-61"></a>    }</span>
+<span id="cb25-62"><a href="#cb25-62"></a>}</span></code></pre></div>
+<p>「公共交通オープンデータセンターへのユーザー登録」で設定した文字列リソースは、<code>getString()</code>メソッドで取得できます。<code>Retrofit</code>の生成APIはFluentなBuilderパターンで作られているんですけど、Fluentが主でBuilderパターンの意味は少なくて、<code>apply</code>スコープ関数があるKotlinでは無意味……。でもしょうがないので、折衷案なスタイルのコードとなりました。これで初期化作業は終了。</p>
+<p>前述したようにWebサービスの呼び出しは別スレッドでやらなければならないのですけど、Kotlinなら<code>kotlin.concurrent.thread</code>でラムダ式を別スレッドで実行できて便利です。でもまぁ、コード中のコメントにも書きましたけど、Lifecycleを説明するところでさらにかっこいい書き方をご紹介しますので、この書き方はすぐに忘れちゃって大丈夫なんだけどね。</p>
+<p>別スレッドの中で、先程取得した<code>WebService</code>のインスタンスの<code>busstopPole()</code>メソッドを呼び出して<code>Call</code>インスタンスを取得して、さらに<code>execute()</code>しています。こんな面倒な形になっているのは、同期で呼び出す場合にも非同期（コールバック方式）で呼び出す場合にも対応しているから。で、今回は可読性が高い同期の<code>execute()</code>メソッドを使用しました。あとは、<code>isSuccessful</code>でHTTPのエラーが発生していないことを確認して、<code>body()</code>を取得して、これで通信は終了。</p>
+<p>ここまででWebサービスから取得した<code>JsonArray</code>は、テストのために、<code>Log.d()</code>で内容をログ出力して終了です。あとは、HTTP以前のエラー（たとえばサーバーが見つからない等）に対応するために、<code>try/catch</code>します。</p>
+<p>と、こんな感じでRetrofit2は使用できるのですけど、上のコードは、実はかなり格好悪いコードなんですよ。Kotlinの良さを全く引き出せていません。なので、修正しましょう。</p>
+<h2 id="null安全の便利機能を使ってみる">Null安全の便利機能を使ってみる</h2>
+<p>Kotlinでは、<code>NullPointerException</code>が発生するようなコードは、基本的にコンパイルできません。たとえば、先程のコードの「nullチェック」とコメントした<code>if</code>をコメント・アウトすると、コンパイル・エラーとなります。</p>
+<p>Kotlinがこのような離れ業をするには、変数や関数の戻り値が<code>null</code>になりえるかどうかをコード上で表現できなければならないわけで、Kotlinでは、型名の後ろに<code>?</code>がつくかどうかで表現しています。<code>Int</code>なら<code>null</code>になることはない、<code>Int?</code>ならば<code>null</code>になる可能性があるって感じ。上のコードのRetrofit2の<code>Response</code>の<code>body()</code>は<code>JsonArray?</code>を返すので、その戻り値のメソッドを呼ぶとコンパイル・エラーになるというわけ。</p>
+<p>で、Kotlinで<code>Foo?</code>の変数を<code>Foo</code>にするのは簡単で、<code>if</code>等で<code>null</code>でないことを確認すればよい。先程のコードの<code>if</code>がまさにそれなわけですな。でも、そんな<code>if</code>だらけのコードを書くのは大変すぎるし読みづらすぎるので、いくつかの便利な記法があります。</p>
+<p>１つ目は、<code>!!</code>。文法的には<code>null</code>の可能性があるように見えるかもしれないけれど、<code>null</code>でないことをプログラマーが保証するって場合です。<code>var x: Foo? = null; x.bar()</code>はコンパイル・エラーになりますけど、<code>var x: Foo? = null; x!!.bar()</code>ならコンパイルは通ります。もちろん、実行時に<code>NullPointerException</code>が出るでしょうけど。</p>
+<p>2つ目は、<code>?.</code>。<code>null</code>ならばメソッドを呼び出さないで<code>null</code>を返して、そうでなければメソッドを実行してその戻り値を返すという記法です。<code>var x: Foo? = null; var y = x?.bar()</code>は、コンパイルも通りますし<code>NullPointerException</code>も出ません。<code>bar()</code>は実行されず、<code>y</code>には<code>null</code>がセットされます。</p>
+<p>3つ目は、<code>?:</code>。<code>?.</code>の反対で、<code>null</code>の場合に実行させたい処理を記述できます。<code>var x: Foo ?= null; var y = x?.bar() ?: &quot;BAR&quot;</code>なら、<code>y</code>の値は<code>null</code>ではなく「BAR」になります。</p>
+<p>これらの記法ともはや見慣れたスコープ関数を組み合わせれば、先程のコードはもっときれいになります。たとえば、こんな感じ。</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb26-1"><a href="#cb26-1"></a>run {</span>
+<span id="cb26-2"><a href="#cb26-2"></a>    <span class="kw">val</span> <span class="va">response</span> = webService.busstopPole(consumerKey).execute()</span>
+<span id="cb26-3"><a href="#cb26-3"></a></span>
+<span id="cb26-4"><a href="#cb26-4"></a>    <span class="cf">if</span> (!response.isSuccessful) {</span>
+<span id="cb26-5"><a href="#cb26-5"></a>        Log.e(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;HTTP Error: ${response.code()}&quot;</span>)</span>
+<span id="cb26-6"><a href="#cb26-6"></a>        return<span class="at">@run</span> <span class="kw">null</span></span>
+<span id="cb26-7"><a href="#cb26-7"></a>    }</span>
+<span id="cb26-8"><a href="#cb26-8"></a></span>
+<span id="cb26-9"><a href="#cb26-9"></a>    response.body()  <span class="co">// ラムダ式では、最後の式の結果がラムダ式の戻り値になります</span></span>
+<span id="cb26-10"><a href="#cb26-10"></a></span>
+<span id="cb26-11"><a href="#cb26-11"></a>}?.let { busStopPoleJsonArray -&gt;  <span class="co">// ?.なので、run { ... }の結果がnullならlet { ... }は実行されません。</span></span>
+<span id="cb26-12"><a href="#cb26-12"></a>   <span class="cf">for</span> (busStopPoleJsonObject <span class="kw">in</span> busStopPoleJsonArray.map { it.asJsonObject }.filter { it.<span class="kw">get</span>(<span class="st">&quot;odpt:operator&quot;</span>).asString == <span class="st">&quot;odpt.Operator:Toei&quot;</span> }.take(<span class="dv">10</span>)) {</span>
+<span id="cb26-13"><a href="#cb26-13"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>owl:sameAs<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb26-14"><a href="#cb26-14"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>dc:title<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb26-15"><a href="#cb26-15"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>odpt:kana<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb26-16"><a href="#cb26-16"></a>    }</span>
+<span id="cb26-17"><a href="#cb26-17"></a>} ?: return<span class="at">@thread</span>  <span class="co">// run { ... }の結果がnullならリターン</span></span></code></pre></div>
+<p>うん、マシになりました。でもまだ駄目です。他のWebサービスも呼び出す場合は、<code>run { ... }</code>の中のほとんどをもう一回書かなければならないでしょうから。</p>
+<h2 id="高階関数を作ってみる">高階関数を作ってみる</h2>
+<p>というわけで、関数化しましょう。こんな感じ。</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb27-1"><a href="#cb27-1"></a><span class="kw">private</span> <span class="kw">fun</span> &lt;<span class="dt">T</span>&gt; <span class="fu">getWebServiceResultBody</span>(<span class="va">callWebService</span>: () -&gt; <span class="dt">Call</span>&lt;<span class="va">T</span>&gt;): <span class="dt">T?</span> {</span>
+<span id="cb27-2"><a href="#cb27-2"></a>    <span class="kw">val</span> <span class="va">response</span> = callWebService().execute()</span>
+<span id="cb27-3"><a href="#cb27-3"></a></span>
+<span id="cb27-4"><a href="#cb27-4"></a>    <span class="cf">if</span> (!response.isSuccessful) {</span>
+<span id="cb27-5"><a href="#cb27-5"></a>        Log.e(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;HTTP Error: ${response.code()}&quot;</span>)</span>
+<span id="cb27-6"><a href="#cb27-6"></a>        <span class="kw">return</span> <span class="kw">null</span></span>
+<span id="cb27-7"><a href="#cb27-7"></a>    }</span>
+<span id="cb27-8"><a href="#cb27-8"></a></span>
+<span id="cb27-9"><a href="#cb27-9"></a>    <span class="kw">return</span> response.body()</span>
+<span id="cb27-10"><a href="#cb27-10"></a>}</span></code></pre></div>
+<p>引数は関数です。このような関数を引数にする関数を高階関数と呼びます。Kotlinでは、<code>(引数) -&gt; 戻り値</code>で関数の型を表現できて、上のコードの<code>&lt;T&gt;</code>の部分はテンプレートです。呼び出し側はこんな感じです。</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb28-1"><a href="#cb28-1"></a>getWebServiceResultBody { webService.busstopPole(consumerKey) }?.let { busStopPoleJsonArray -&gt;</span>
+<span id="cb28-2"><a href="#cb28-2"></a>    <span class="cf">for</span> (busStopPoleJsonObject <span class="kw">in</span> busStopPoleJsonArray.map { it.asJsonObject }.filter { it.<span class="kw">get</span>(<span class="st">&quot;odpt:operator&quot;</span>).asString == <span class="st">&quot;odpt.Operator:Toei&quot;</span> }.take(<span class="dv">10</span>)) {</span>
+<span id="cb28-3"><a href="#cb28-3"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>owl:sameAs<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb28-4"><a href="#cb28-4"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>dc:title<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb28-5"><a href="#cb28-5"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busStopPoleJsonObject.get(&quot;</span>odpt:kana<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb28-6"><a href="#cb28-6"></a>    }</span>
+<span id="cb28-7"><a href="#cb28-7"></a>}</span></code></pre></div>
+<p>もはや見慣れたコードですな。前にも述べましたけど、関数はラムダ式で定義することができて、最後のパラメーターがラムダ式の場合はそのパラメーターは括弧の外にだす慣習があって、そして、ラムダ式だけを引数にする場合は括弧を省略できるので、このようなすっきりした記述になります。</p>
+<p>ついでですから、<code>odpt:BusroutePattern</code>を取得して、その路線の<code>odpt:Bus</code>を取得するコードも書いてみましょう。</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode kotlin"><code class="sourceCode kotlin"><span id="cb29-1"><a href="#cb29-1"></a>getWebServiceResultBody { webService.busroutePattern(consumerKey) }?.let { busroutePatternJsonArray -&gt;</span>
+<span id="cb29-2"><a href="#cb29-2"></a>    <span class="cf">for</span> (busroutePatternJsonObject <span class="kw">in</span> busroutePatternJsonArray.map { it.asJsonObject }.filter { it.<span class="kw">get</span>(<span class="st">&quot;odpt:operator&quot;</span>).asString == <span class="st">&quot;odpt.Operator:Toei&quot;</span> }.take(<span class="dv">10</span>)) {</span>
+<span id="cb29-3"><a href="#cb29-3"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busroutePatternJsonObject.get(&quot;</span>owl:sameAs<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb29-4"><a href="#cb29-4"></a>        Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busroutePatternJsonObject.get(&quot;</span>dc:title<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb29-5"><a href="#cb29-5"></a></span>
+<span id="cb29-6"><a href="#cb29-6"></a>        <span class="cf">for</span> (busstopPoleOrderJsonObject <span class="kw">in</span> busroutePatternJsonObject.<span class="kw">get</span>(<span class="st">&quot;odpt:busstopPoleOrder&quot;</span>).asJsonArray.take(<span class="dv">10</span>).map { it.asJsonObject }) {</span>
+<span id="cb29-7"><a href="#cb29-7"></a>            Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busstopPoleOrderJsonObject.get(&quot;</span>odpt:index<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb29-8"><a href="#cb29-8"></a>            Log.d(<span class="st">&quot;SplashFragment&quot;</span>, <span class="st">&quot;${busstopPoleOrderJsonObject.get(&quot;</span>odpt:busstopPole<span class="st">&quot;)}&quot;</span>)</span>
+<span id="cb29-9"><a href="#cb29-9"></a>        }</span>
+<span id="cb29-10"><a href="#cb29-10"></a></span>
+<span id="cb29-11"><a href="#cb29-11"></a>        getWebServiceResultBody { webService.bus(consumerKey, busroutePatternJsonObject.<span class="kw">get</span>(<span class="st">&quot;owl:sameAs&quot;</span>).asString) }?.let { buses -&gt;</span>
+<span id="cb29-12"><a href="#cb29-12"></a>            <span class="cf">for</span> (bus <span class="kw">in</span> buses.take(<span class="dv">10</span>)) {</span>
+<span id="cb29-13"><a href="#cb29-13"></a>                Log.d(<span class="st">&quot;SplashFragment&quot;</span>, bus.id)</span>
+<span id="cb29-14"><a href="#cb29-14"></a>                Log.d(<span class="st">&quot;SplashFragment&quot;</span>, bus.routeId)</span>
+<span id="cb29-15"><a href="#cb29-15"></a>                Log.d(<span class="st">&quot;SplashFragment&quot;</span>, bus.fromBusStopPoleId)</span>
+<span id="cb29-16"><a href="#cb29-16"></a>            }</span>
+<span id="cb29-17"><a href="#cb29-17"></a>        }</span>
+<span id="cb29-18"><a href="#cb29-18"></a>    }</span>
+<span id="cb29-19"><a href="#cb29-19"></a>}</span></code></pre></div>
+<p><code>getWebServiceResultBody()</code>メソッドを定義済みなのでとても簡単です。<code>odpt:Bus</code>の方は、クラスを定義したのでさらに簡単なコードになっていますな。</p>
+<h2 id="アプリへの権限の付与">アプリへの権限の付与</h2>
+<p>というわけで、コーディングは終わり。早速実行……するまえに、アプリにインターネット・アクセスの権限を付加しなければなりません。[Project]ビューの[app] - [manifests]の下のAndroidManifest.xmlを開いて、<code>&lt;users-permission&gt;</code>タグを追加してください。</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb30-1"><a href="#cb30-1"></a><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;utf-8&quot;<span class="kw">?&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a><span class="kw">&lt;manifest</span></span>
+<span id="cb30-3"><a href="#cb30-3"></a><span class="ot">    xmlns:android=</span><span class="st">&quot;http://schemas.android.com/apk/res/android&quot;</span></span>
+<span id="cb30-4"><a href="#cb30-4"></a><span class="ot">    package=</span><span class="st">&quot;com.tail_island.jetbus&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb30-5"><a href="#cb30-5"></a></span>
+<span id="cb30-6"><a href="#cb30-6"></a>    <span class="kw">&lt;uses-permission</span><span class="ot"> android:name=</span><span class="st">&quot;android.permission.INTERNET&quot;</span> <span class="kw">/&gt;</span>  <span class="co">&lt;!-- 追加 --&gt;</span></span>
+<span id="cb30-7"><a href="#cb30-7"></a></span>
+<span id="cb30-8"><a href="#cb30-8"></a>    <span class="kw">&lt;application</span></span>
+<span id="cb30-9"><a href="#cb30-9"></a>        <span class="er">....</span><span class="kw">&gt;</span></span>
+<span id="cb30-10"><a href="#cb30-10"></a>        ....</span>
+<span id="cb30-11"><a href="#cb30-11"></a>    <span class="kw">&lt;/application&gt;</span></span>
+<span id="cb30-12"><a href="#cb30-12"></a></span>
+<span id="cb30-13"><a href="#cb30-13"></a><span class="kw">&lt;/manifest&gt;</span></span></code></pre></div>
+<p>これで本当に全て完了。実行してみましょう。<code>Log</code>で出力した結果は、Android Studioの[Logcat]ビューで見ることができます。</p>
+<p>絵</p>
+<p>うん、正しくデータを取れていますね。Retrofit2ならWebサービス呼び出しはとても楽チン。</p>
 <h1 id="room">Room</h1>
 <h1 id="dagger">Dagger</h1>
 <h1 id="lifecycle">Lifecycle</h1>
