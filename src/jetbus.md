@@ -428,7 +428,6 @@ GUIツールはかったるいという私の趣味嗜好により、[Text]タ�
 ~~~
 
 ConstraintLayoutのところでUIコンポーネントは`app:layout_constraint...`属性でレイアウトすると説明しておきながら、そこでは使わなかった`app:layout_constraint...`が出てきてくれました（activity\_main.xmlでは、`android:layout_width`属性も`android:layout_height`属性も「match_parent」だったので、制約をつける必要がなかったんですよ）。自分がなんの画面なのかを表示する`TextView`を左上に、その下に`Button`を表示するようになっています。`android:layout_marginTop`属性はマージンです。マージン分だけ隙間を開けてくれるわけですな。
-
 こんな感じでルート要素が`<layout>`になるように、他の`Fragment`のレイアウトも同様に修正してください。
 
 ## Fragmentの実装
@@ -809,11 +808,11 @@ NavigationとNavigation drwerとApp barはとても良くできていて、上�
 
 動画
 
-うん、完璧ですな。Navigationよ今夜もありがとう。Navigationくらいに楽チンな、App barとNavigation drawerをどうにかしてくれるライブラリを作ってくれないかなぁ……。
+うん、完璧ですな。Navigationよ今夜もありがとう。Navigationくらいに楽チンな、App barとNavigation drawerをどうにかしてくれるライブラリがJetpackに追加されないかなぁ……。
 
 # Retrofit2
 
-本アプリは[公共交通オープンデータセンター](https://www.odpt.org/)が提供してくれるデータが無いと動きようがありませんので、個々の画面の機能を作っていく前に、HTTP通信でWebサーバーからデータを取得する処理を作ってみましょう。ただ、残念なことにJetpackにはHTTP通信の機能がありませんので、Retrofit2を使用します。
+さて、本アプリは[公共交通オープンデータセンター](https://www.odpt.org/)が提供してくれるデータが無いと動きようがありませんので、個々の画面の機能を作っていく前に、HTTP通信でWebサーバーからデータを取得する処理を作ってみましょう。残念なことにJetpackにはHTTP通信の機能がありませんので、外部のライブラリであるRetrofit2を使用します。
 
 ## Retrofit2の組み込み
 
@@ -832,13 +831,315 @@ dependencies {
 }
 ~~~
 
-これで、いつでもHTTP通信できるわけですけど、さて、公共交通オープンデータセンターからどんなデータを取得できるのでしょうか？
+これで、いつでもHTTP通信できるわけですけど、その前に、公共交通オープンデータセンターにユーザー登録しないとね。
 
-## 高交通オープンデータセンター
+## 公共交通オープンデータセンターへのユーザー登録
 
-[公共交通オープンデータセンター](https://odpt.org/)のサイトを開いて、下の方にある[[公共交通オープンデータセンター開発者サイト](https://developer.odpt.org/ja/info)]リンクをクリックします。で、真ん中あたりにある[ユーザ登録のお願い]ボタンを押して、もろもろ入力して[この内容で登録を申請する]ボタンを押して、で、「最大2営業日」で登録完了のメールが送られてきます……。なんで最大2営業日なんだろ？
+[公共交通オープンデータセンター](https://odpt.org/)のサイトを開いて、下の方にある[[公共交通オープンデータセンター開発者サイト](https://developer.odpt.org/ja/info)]リンクをクリックします。で、真ん中あたりにある[ユーザ登録のお願い]ボタンを押して、もろもろ入力して[この内容で登録を申請する]ボタンを押すと、「最大2営業日」で登録完了のメールが送られてきます。……どうして、最大とはいえ2営業日もかかるんだろ？
 
-登録が完了したらログインして、右上の[Account]メニューの[アクセストークンの確認・追加]を選ぶと、アクセストークンが表示されます。まずはこれをコピーしてください。で、この情報の保存先なのですけど、今回はリソースを使用しましょう。Androidアプリの開発では、様々な定数をリソースとしてコードの外に定義できます。このリソースをうまく使うと、国際化もできてとても便利です。
+登録が完了したらログインして、右上の[Account]メニューの[アクセストークンの確認・追加]を選ぶと、アクセス・トークンが表示されます。まずはこれをコピーしてください。この情報の保存先としては、リソースを使用します。[File] - [New] - [Android Resource File]メニューを選択して、[File name]に「odpt」を入力して[Resource type]を「Value」に設定し、作成されたodpt.xmlに以下を入力します。
+
+~~~ xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="consumerKey">アクセス・トークン</string>
+</resources>
+~~~
+
+よし、これで公共交通オープンデータセンターのデータを使い放題……なのですけど、いったい、どんなデータがあるのでしょうか？
+
+## 公共交通オープンデータセンターのデータ
+
+[公共交通オープンデータセンター開発者サイト](https://developer.odpt.org/)の[[API仕様](https://developer.odpt.org/documents)]リンクをクリックすれば、公共交通オープンデータセンターが提供するデータの仕様が分かります。
+
+左に表示されている目次の[4. ODPT Bus API]リンクをクリックすると、バスに関するどのようなデータをとれるのかが分かります。見てみると、以下の6つの情報を取得できるみたい。
+
+* `odpt:BusstopPole`（バス停（標柱）の情報）
+* `odpt:BusroutePattern`（バス路線の系統情報）
+* `odpt:BusstopPoleTimetable`（バス停(標柱)の時刻表）
+* `odpt:BusTimetable`（バスの便の時刻表）
+* `odpt:BusroutePatternFare`（運賃情報）
+* `odpt:Bus`（バスの運行情報）
+
+バスの運行情報がありますから、バスの車両の接近情報は表示できそうですね。なんかいろいろ細かいことが書いてありますけど、習うより慣れろってことで、Webブラウザを開いて、まずはバス停を取得してみましょう。「http://api.odpt.org/api/v4/odpt:BusstopPole?acl:consumerKey=ACL\_CONSUMERKEY&odpt:operator=odpt.Operator:Toei」（ACL\_CONSUMERKEYの部分には、ユーザー登録で取得したアクセストークンをコピー＆ペーストしてください）を開いてみます。なるほどバス停のデータが取得できている……のですけど、検索しても、こんなダラダラ生きている私を雇用してくださってるとてもありがたい「日本ユニシス本社前」という、私が会社からの帰りに使うバス停が見つかりませんでした。
+
+図
+
+データが欠落しているのは、API仕様の[1.3. インターフェース]の中の[1.3.1. 留意点]に「APIによって出力される結果がシステムの上限件数を超える場合、上限件数以下にフィルターされた結果が返る」とあって、リンクを辿って調べてみたら、その上限件数は1,000件だったためです（2019年8月現在）。`odpt:BusstopPole`はバス停ではなくてバス停の標柱（方面ごとに立っているアレ）で大量なので、余裕で1,000件を超えてしまって切り捨てられちゃったみたい。
+
+というわけで、データ検索APIではなくて、データダンプAPIを使いましょう。「http://api.odpt.org/api/v4/odpt:BusstopPole.json?acl:consumerKey=ACL\_CONSUMERKEY」（URIに「.json」が追加されました。あと、先ほどと同様に、ACL\_CONSUMERKEYの部分には、ユーザー登録で取得したアクセストークンをコピー＆ペーストしてください）を開いて、データの取得が完了するまで、しばし待ちます。日本全国津々浦々のバス停の標柱全てという大量のデータなので、時間がかかるんですよ……。はい、今度は、「日本ユニシス本社前」のデータが見つかりました。
+
+図
+
+ドキュメントによれば、`odpt:BusstopPole`と`odpt:BusroutePattern`は`owl:sameAs`属性で互いに紐付けられるので、出発バス停の標柱群（一つのバス停に複数の標柱がある）と到着バス停の標柱群を指定すれば、その両方に紐付いている`odpt:BusroutePattern`を抽出することで路線を見つけることができそう。ただ、`odpt:BusroutePattern`の検索APIのクエリー・パラメーターには`odpt:BusstopPole`がなかったので、抽出は自前のコードでやらなければなりませんけどね。どうせ抽出を自前のコードでやるのであれば、`odpt:BusroutePattern`もデータダンプAPIでまるっと取得してしまうことにしましょう。
+
+次。`odpt:Bus`です。APIの[4.ODPT Bus API]の中の[4.2.パス]を読むと、`odpt:BusroutePattern`をクエリー・パラメーターにとることができて、[1.4. データ検索API (/v4/RDF_TYPE?)]の中の[1.4.1. フィルター処理]によれば、カンマ区切りにすればOR条件での検索になるらしい。これなら、複数の路線のバスの運行情報を一発で取得できる……のですけど、[4.3. 定義]の中の[4.3.1. odpt:Bus]の記述によれば、どのバス停を通過したのかは分かるけど、あとどれくらいで今私の目の前にあるバス停に到着するのかは分からないみたい。なので、`odpt:BusTimetable`も取得して、時刻表からバス停とバス停の間の時間を調べて、それを足し合わせて到着までの予想時間としましょう。だから、`odpt:BusTimetable`を取得する処理も作らないとね。
+
+あと、API仕様にはバスの現在の位置によって`odpt:fromBusstopPole`属性（直近に通過した、あるいは停車中のバス停）と`odpt:BusstopPole`（次に到着するバス停）の情報がいろいろ変わると書いてあるのですけど、都営バスの実際のデータを取得して調べてみると、どうも現在位置がどうであれ`odpt:fromBusstopPole`属性と`odpt:toBusstopPole`属性の両方が設定されているみたい。ならば手を抜いて`odpt:fromBusstopPole`属性だけを見ればいいかなぁと。さらに、`odpt:BusTimetable`の`odpt:calendar`属性（平日時刻表とか休日時刻表とか）は[2.3. 定義]の中の[2.3.1. odpt:Calendar]に書いてある汎用データを使用していませんでした。なんだか、都営バス独自の特殊なデータが並んでいやがります……。まぁ、今回の`odbt:BusTimetable`の使用目的は到着時間を計算するための元ネタでしかありませんから、`odpt:calendar`も無視することにしましょう。プログラムが簡単になるし。
+
+そうそう、`odpt:BusstopPole`と`odpt:BusroutePattern`、`odpt:BusTimetable`は、データの取得に時間がかかる上にほとんど変更がない情報ですから、RDBMSにキャッシュすることにしましょう。RDBMSを使えば、突き合わせの処理が楽になりますしね。
+
+## Webサービスの定義
+
+やることが決まりましたので、Webサービスの定義を作りましょう。でもその前に、データ受け渡しのためのクラスを作成します。まずは、`odpt:Bus`を表現するクラスを作成します。モデルを入れるための`model`パッケージを作成して、その中にBus.ktファイルを作成して、以下のコードを入力してください。
+
+~~~ kotlin:Bus.kt
+package com.tail_island.jetbus.model
+
+import com.google.gson.annotations.SerializedName
+
+data class Bus(
+    @SerializedName("owl:sameAs")
+    var id: String,
+
+    @SerializedName("odpt:busroutePattern")
+    var routeId: String,
+
+    @SerializedName("odpt:fromBusstopPole")
+    var fromBusStopPoleId: String
+)
+~~~
+
+なんでクラスの後ろの括弧が波括弧（`{}`）じゃなくて丸括弧（`()`）なんだという疑問を抱いたJavaプログラマの方がいるかもしれませんので、ここで少しだけKotlinの解説をさせてください。
+
+Kotlinでは、Scalaと同様に、クラス定義の際にコンストラクタの引数を定義できます。`class Foo(param1: Type, param2: Type)`みたいな感じ。そんなところに引数を書いたらコンストラクタでの処理はどこに書くんだよと思うかもしれませんけど、コンストラクタの処理は普通は書きません（どうしても書きたい場合には`init {}`という構文があるのでご安心を）。どうして普通は書かないのかと言うと、コンストラクタでの処理は一般にインスタンスの状態の設定で、インスタンスの状態である属性の定義ではコンストラクタの引数が使えるから。`class Foo(param: Type) { var bar = param.doSomething() }`みたいな感じです。
+
+あと、Kotlinはミュータブル（可変）の変数は`var`、イミュータブル（不変）の変数は`val`で宣言するのですけど、`var`や`val`は先のコードのようにプロパティの定義でも使えます（`var`だと`get`と`set`が生成されて、`val`だと`get`だけが生成される）。これがコンストラクタの引数にも適用されて、`class Foo(var param1: Type, val param2: Type) {}`と書けば、ミュータブルなプロパティの`param1`とイミュータブルなプロパティの`param2`が生成されるというわけ。
+
+さらに、データを保持するためのクラス作成専用の`data class`という構文があります。`data class`を使うと、`equals()`メソッドや`hashCode()`メソッド、`toString()`メソッド、`copy()`メソッド（あと`componentN()`メソッド）が自動で生成されてとても便利。さらに、`data class`でメソッドの定義が不要な場合は`{}`を省略できるので、上のようなコードになるわけですな。
+
+さて、Retrofit2（が内部で使用しているGSON）的に重要なのは、`@SerializedName`の部分です。これはアノテーションと呼ばれるもので、ライブラリやコード・ジェネレーターが参照します。Retrofit2（が内部で使用しているGSON）は、`@SerializedName`アノテーションを見つけると、JSONを作成する際に`@SerializedName`アノテーションの引数で指定した文字列を使用してくれます。これで、`owl:sameAs`のようなKotlinでは許されない名前の属性を持ったJSONでも取り扱えるようになるというわけ。ふう、これで`odpt:Bus`を受け取る準備は完璧です。
+
+同様に残りの`odpt:BusstopPole`と`odpt:BusroutePattern`、`odpt:BusTimetable`も……と考えたのですけど、これらはRDBMSにキャッシュすることにしましたから、RDBMSのレコードを表現するクラスとごっちゃになってしまって混乱しそう。だから今回はクラスを作成しないで、Retrofit2（が内部で使用しているGSON）が提供する`JsonArray`（検索APIは配列を返すので、`JsonObject`ではなくて`JsonArray`にしました）を使用します。
+
+以上でWebサービスを呼び出した結果を受け取るクラスの型が全て決まりましたので、Webサービスを呼び出す部分をRetrofit2を使用して作成しましょう。といっても、実装は簡単で`interface`を定義するだけ。HTTP通信のメソッドをアノテーション（今回は`@GET`）で設定して、Webサービスの引数を同様にアノテーション（今回はクエリー・パラメーターなので`@Query`）で定義するだけですが。モデルを作成した`model`パッケージの中にWebService.ktファイルを作成して、以下を入力してください。
+
+~~~ kotlin:WebService.kt
+package com.tail_island.jetbus.model
+
+import com.google.gson.JsonArray
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface WebService {
+    @GET("/api/v4/odpt:BusstopPole.json")
+    fun busstopPole(@Query("acl:consumerKey") consumerKey: String): Call<JsonArray>
+
+    @GET("/api/v4/odpt:BusroutePattern.json")
+    fun busroutePattern(@Query("acl:consumerKey") consumerKey: String): Call<JsonArray>
+
+    @GET("/api/v4/odpt:BusTimetable")
+    fun busTimeTable(@Query("acl:consumerKey") consumerKey: String, @Query("odpt:busroutePattern") routePattern: String): Call<JsonArray>
+
+    @GET("/api/v4/odpt:Bus")
+    fun bus(@Query("acl:consumerKey") consumerKey: String, @Query("odpt:busroutePattern") routePattern: String): Call<List<Bus>>
+}
+~~~
+
+はい、完成です。楽チン。
+
+## Webサービスの呼び出し
+
+とは言っても`interface`は呼び出しができませんので、なんとかして（Retrofit2のAPIが要求する形で）インスタンスを生成する方法を調べなければなりません。あとですね、Webサービスの呼び出しには時間がかかることにも、考慮が必要です。というのも、AndroidではUIの制御はメイン・スレッド*のみ*から実施できることになっていて、だからメイン・スレッドでWebサービスのような時間がかかる処理をすると、その処理の間は画面が無反応になっちゃう。だから、Webサービスの呼び出しは*別スレッドでやらなければならない*んです（そうしないと、画面が無反応になる以前に実行時エラーとなります）。
+
+と、こんな感じでいろいろ複雑なので、とりあえずコードを書いてみましょう。まずは、`odpt:BusstopPole`を取得してみます。最初に表示される画面である`SplashFragment`の、画面に表示される直前に呼び出される`onStart()`メソッドに、この処理を書きます。
+
+~~~ kotlin
+package com.tail_island.jetbus
+
+// ....
+
+import android.util.Log
+import com.tail_island.jetbus.model.WebService
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.io.IOException
+import kotlin.concurrent.thread
+
+class SplashFragment: Fragment() {
+    // ...
+
+    override fun onStart() {
+        super.onStart()
+
+        // リソースからアクセス・トークンを取得します。consumerKeyって名前は提供側の用語なので嫌だけど、公共交通オープンデータセンターがこの名前を使っちゃっているからなぁ……
+        val consumerKey = getString(R.string.consumerKey)
+
+        // WebServiceのインスタンスを生成します。スコープ関数が存在しない哀れな環境向けのFluentなBuilderパターン……
+        val webService = Retrofit.Builder().apply {
+            baseUrl("https://api.odpt.org")
+            addConverterFactory(GsonConverterFactory.create())
+        }.build().create(WebService::class.java)
+
+        // Webサービスを呼んでいる間は画面が無反応になるのでは困るので、スレッドを生成します。今は素のスレッドを使用していますけど、後でもっとかっこいい方式をご紹介しますのでご安心ください
+        thread {
+            try {
+                // WebServiceを呼び出します
+                val response = webService.busstopPole(consumerKey).execute()
+
+                // HTTP通信した結果が失敗の場合は、エラーをログに出力してnullを返します
+                if (!response.isSuccessful) {
+                    Log.e("SplashFragment", "HTTP Error: ${response.code()}")
+                    return@thread
+                }
+
+                // レスポンスのボディは、interfaceの定義に従ってJsonArrayになります
+                val busStopPoleJsonArray = response.body()
+
+                // nullチェック
+                if (busStopPoleJsonArray == null) {
+                    return@thread
+                }
+
+                // JsonObjectに変換して、都営バスのデータだけにフィルターして、最初の10件だけで、ループします
+                for (busStopPoleJsonObject in busStopPoleJsonArray.map { it.asJsonObject }.filter { it.get("odpt:operator").asString == "odpt.Operator:Toei" }.take(10)) {
+                    // 確認のために、いくつかの属性をログ出力します
+                    Log.d("SplashFragment", "${busStopPoleJsonObject.get("owl:sameAs")}")
+                    Log.d("SplashFragment", "${busStopPoleJsonObject.get("dc:title")}")
+                    Log.d("SplashFragment", "${busStopPoleJsonObject.get("odpt:kana")}")
+                }
+
+            } catch (e: IOException) {
+                // HTTP以前のエラーへの考慮も必要です。ログ出力しておきます
+                Log.e("SplashFragment", "${e.message}")
+            }
+        }
+    }
+}
+~~~
+
+「公共交通オープンデータセンターへのユーザー登録」で設定した文字列リソースは、`getString()`メソッドで取得できます。`Retrofit`の生成APIはFluentなBuilderパターンで作られているんですけど、Fluentが主でBuilderパターンの意味は少なくて、`apply`スコープ関数があるKotlinでは無意味……。でもしょうがないので、折衷案なスタイルのコードとなりました。これで初期化作業は終了。
+
+前述したようにWebサービスの呼び出しは別スレッドでやらなければならないのですけど、Kotlinなら`kotlin.concurrent.thread`でラムダ式を別スレッドで実行できて便利です。でもまぁ、コード中のコメントにも書きましたけど、Lifecycleを説明するところでさらにかっこいい書き方をご紹介しますので、この書き方はすぐに忘れちゃって大丈夫なんだけどね。
+
+別スレッドの中で、先程取得した`WebService`のインスタンスの`busstopPole()`メソッドを呼び出して`Call`インスタンスを取得して、さらに`execute()`しています。こんな面倒な形になっているのは、同期で呼び出す場合にも非同期（コールバック方式）で呼び出す場合にも対応しているから。で、今回は可読性が高い同期の`execute()`メソッドを使用しました。あとは、`isSuccessful`でHTTPのエラーが発生していないことを確認して、`body()`を取得して、これで通信は終了。
+
+ここまででWebサービスから取得した`JsonArray`は、テストのために、`Log.d()`で内容をログ出力して終了です。あとは、HTTP以前のエラー（たとえばサーバーが見つからない等）に対応するために、`try/catch`します。
+
+と、こんな感じでRetrofit2は使用できるのですけど、上のコードは、実はかなり格好悪いコードなんですよ。Kotlinの良さを全く引き出せていません。なので、修正しましょう。
+
+## Null安全の便利機能を使ってみる
+
+Kotlinでは、`NullPointerException`が発生するようなコードは、基本的にコンパイルできません。たとえば、先程のコードの「nullチェック」とコメントした`if`をコメント・アウトすると、コンパイル・エラーとなります。
+
+Kotlinがこのような離れ業をするには、変数や関数の戻り値が`null`になりえるかどうかをコード上で表現できなければならないわけで、Kotlinでは、型名の後ろに`?`がつくかどうかで表現しています。`Int`なら`null`になることはない、`Int?`ならば`null`になる可能性があるって感じ。上のコードのRetrofit2の`Response`の`body()`は`JsonArray?`を返すので、その戻り値のメソッドを呼ぶとコンパイル・エラーになるというわけ。
+
+で、Kotlinで`Foo?`の変数を`Foo`にするのは簡単で、`if`等で`null`でないことを確認すればよい。先程のコードの`if`がまさにそれなわけですな。でも、そんな`if`だらけのコードを書くのは大変すぎるし読みづらすぎるので、いくつかの便利な記法があります。
+
+１つ目は、`!!`。文法的には`null`の可能性があるように見えるかもしれないけれど、`null`でないことをプログラマーが保証するって場合です。`var x: Foo? = null; x.bar()`はコンパイル・エラーになりますけど、`var x: Foo? = null; x!!.bar()`ならコンパイルは通ります。もちろん、実行時に`NullPointerException`が出るでしょうけど。
+
+2つ目は、`?.`。`null`ならばメソッドを呼び出さないで`null`を返して、そうでなければメソッドを実行してその戻り値を返すという記法です。`var x: Foo? = null; var y = x?.bar()`は、コンパイルも通りますし`NullPointerException`も出ません。`bar()`は実行されず、`y`には`null`がセットされます。
+
+3つ目は、`?:`。`?.`の反対で、`null`の場合に実行させたい処理を記述できます。`var x: Foo ?= null; var y = x?.bar() ?: "BAR"`なら、`y`の値は`null`ではなく「BAR」になります。
+
+これらの記法ともはや見慣れたスコープ関数を組み合わせれば、先程のコードはもっときれいになります。たとえば、こんな感じ。
+
+~~~ kotlin
+run {
+    val response = webService.busstopPole(consumerKey).execute()
+
+    if (!response.isSuccessful) {
+        Log.e("SplashFragment", "HTTP Error: ${response.code()}")
+        return@run null
+    }
+
+    response.body()  // ラムダ式では、最後の式の結果がラムダ式の戻り値になります
+
+}?.let { busStopPoleJsonArray ->  // ?.なので、run { ... }の結果がnullならlet { ... }は実行されません。
+   for (busStopPoleJsonObject in busStopPoleJsonArray.map { it.asJsonObject }.filter { it.get("odpt:operator").asString == "odpt.Operator:Toei" }.take(10)) {
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("owl:sameAs")}")
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("dc:title")}")
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("odpt:kana")}")
+    }
+} ?: return@thread  // run { ... }の結果がnullならリターン
+~~~
+
+うん、マシになりました。でもまだ駄目です。他のWebサービスも呼び出す場合は、`run { ... }`の中のほとんどをもう一回書かなければならないでしょうから。
+
+## 高階関数を作ってみる
+
+というわけで、関数化しましょう。こんな感じ。
+
+~~~ kotlin
+private fun <T> getWebServiceResultBody(callWebService: () -> Call<T>): T? {
+    val response = callWebService().execute()
+
+    if (!response.isSuccessful) {
+        Log.e("SplashFragment", "HTTP Error: ${response.code()}")
+        return null
+    }
+
+    return response.body()
+}
+~~~
+
+引数は関数です。このような関数を引数にする関数を高階関数と呼びます。Kotlinでは、`(引数) -> 戻り値`で関数の型を表現できて、上のコードの`<T>`の部分はテンプレートです。呼び出し側はこんな感じです。
+
+~~~ kotlin
+getWebServiceResultBody { webService.busstopPole(consumerKey) }?.let { busStopPoleJsonArray ->
+    for (busStopPoleJsonObject in busStopPoleJsonArray.map { it.asJsonObject }.filter { it.get("odpt:operator").asString == "odpt.Operator:Toei" }.take(10)) {
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("owl:sameAs")}")
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("dc:title")}")
+        Log.d("SplashFragment", "${busStopPoleJsonObject.get("odpt:kana")}")
+    }
+}
+~~~
+
+もはや見慣れたコードですな。前にも述べましたけど、関数はラムダ式で定義することができて、最後のパラメーターがラムダ式の場合はそのパラメーターは括弧の外にだす慣習があって、そして、ラムダ式だけを引数にする場合は括弧を省略できるので、このようなすっきりした記述になります。
+
+ついでですから、`odpt:BusroutePattern`を取得して、その路線の`odpt:Bus`を取得するコードも書いてみましょう。
+
+~~~~ kotlin
+getWebServiceResultBody { webService.busroutePattern(consumerKey) }?.let { busroutePatternJsonArray ->
+    for (busroutePatternJsonObject in busroutePatternJsonArray.map { it.asJsonObject }.filter { it.get("odpt:operator").asString == "odpt.Operator:Toei" }.take(10)) {
+        Log.d("SplashFragment", "${busroutePatternJsonObject.get("owl:sameAs")}")
+        Log.d("SplashFragment", "${busroutePatternJsonObject.get("dc:title")}")
+
+        for (busstopPoleOrderJsonObject in busroutePatternJsonObject.get("odpt:busstopPoleOrder").asJsonArray.take(10).map { it.asJsonObject }) {
+            Log.d("SplashFragment", "${busstopPoleOrderJsonObject.get("odpt:index")}")
+            Log.d("SplashFragment", "${busstopPoleOrderJsonObject.get("odpt:busstopPole")}")
+        }
+
+        getWebServiceResultBody { webService.bus(consumerKey, busroutePatternJsonObject.get("owl:sameAs").asString) }?.let { buses ->
+            for (bus in buses.take(10)) {
+                Log.d("SplashFragment", bus.id)
+                Log.d("SplashFragment", bus.routeId)
+                Log.d("SplashFragment", bus.fromBusStopPoleId)
+            }
+        }
+    }
+}
+~~~~
+
+`getWebServiceResultBody()`メソッドを定義済みなのでとても簡単です。`odpt:Bus`の方は、クラスを定義したのでさらに簡単なコードになっていますな。
+
+## アプリへの権限の付与
+
+というわけで、コーディングは終わり。早速実行……するまえに、アプリにインターネット・アクセスの権限を付加しなければなりません。[Project]ビューの[app] - [manifests]の下のAndroidManifest.xmlを開いて、`<users-permission>`タグを追加してください。
+
+~~~ xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tail_island.jetbus">
+
+    <uses-permission android:name="android.permission.INTERNET" />  <!-- 追加 -->
+
+    <application
+        ....>
+        ....
+    </application>
+
+</manifest>
+~~~
+
+これで本当に全て完了。実行してみましょう。`Log`で出力した結果は、Android Studioの[Logcat]ビューで見ることができます。
+
+絵
+
+うん、正しくデータを取れていますね。Retrofit2ならWebサービス呼び出しはとても楽チン。
 
 # Room
 
